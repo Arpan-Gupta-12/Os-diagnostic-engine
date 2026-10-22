@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+    background-image: radial-gradient(circle at 90% -10%, #dbeeff 0, transparent 40%);
+  }
+}
+
+/* Small building blocks so the pages stay short */
+@layer components {
+  .card {
+    @apply rounded-3xl border border-line bg-panel p-5 shadow-[0_6px_24px_-12px_rgba(91,176,242,0.45)];
+  }
+  .card-title {
+    @apply text-xs font-bold uppercase tracking-wider text-muted;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-main {
+    @apply btn bg-accent text-white shadow-md shadow-accent/30 hover:bg-deep;
+  }
+  .btn-soft {
+    @apply btn border border-line bg-soft text-deep hover:border-accent;
+  }
+  .input {
+    @apply rounded-full border border-line bg-white px-4 py-2 text-sm outline-none focus:border-accent;
+  }
+}
+
+/* ---------- Mascot (Pixel): every animation is plain CSS ---------- */
+.mascot * { transform-box: fill-box; transform-origin: center; }
+.m-eye { animation: blink 4s infinite; }
+.m-arm-wave { transform-origin: 20% 20%; animation: wave 0.6s ease-in-out 5 0.8s; }
+.m-heart { animation: beat 1.6s ease-in-out infinite; }
+.m-look .m-pupils { animation: look 1.2s ease-in-out infinite; }
+.m-bounce { animation: bounce-in 0.9s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+
+@keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+@keyframes wave { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-35deg); } }
+@keyframes beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+@keyframes look { 0%, 100% { transform: translateX(-2px); } 50% { transform: translateX(2px); } }
+@keyframes bounce-in { 0% { transform: translateY(-80px) scale(0.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
+
+/* ---------- Intro ---------- */
+.intro { background: linear-gradient(180deg, #ffffff 0%, #e3f1ff 100%); animation: intro-out 0.4s ease 2.6s forwards; }
+.cloud { position: absolute; border-radius: 999px; background: #fff; box-shadow: 0 8px 30px -10px #b9dcfa; animation: drift 9s linear infinite; }
+.cloud::before, .cloud::after { content: ''; position: absolute; background: #fff; border-radius: 50%; }
+.cloud::before { width: 55%; height: 160%; left: 12%; top: -70%; }
+.cloud::after { width: 40%; height: 130%; right: 14%; top: -45%; }
+.intro-text { animation: rise 0.7s ease 0.9s both; }
+.intro-sub { animation: rise 0.7s ease 1.3s both; }
+.sparkle { position: absolute; color: #8ccaf7; animation: twinkle 1.4s ease-in-out infinite; }
+
+@keyframes drift { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.6); } 50% { opacity: 1; transform: scale(1.1); } }
+@keyframes intro-out { to { opacity: 0; } }
+
+.dot-live { animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* Respect the "reduce motion" setting of the OS */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
