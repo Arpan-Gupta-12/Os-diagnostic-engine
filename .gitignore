@@ -1,0 +1,21 @@
+# Java / Maven
+backend/target/
+*.class
+
+# Built frontend copied into Spring Boot (created by "npm run build:app")
+backend/src/main/resources/static/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# IDEs and OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local environment files
+.env
+frontend/.env
