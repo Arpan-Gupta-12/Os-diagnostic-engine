@@ -22,10 +22,12 @@ public class CloseApi {
 
     private final Monitor monitor;
     private final Demo demo;
+    private final Recorder recorder;
 
-    public CloseApi(Monitor monitor, Demo demo) {
+    public CloseApi(Monitor monitor, Demo demo, Recorder recorder) {
         this.monitor = monitor;
         this.demo = demo;
+        this.recorder = recorder;
     }
 
     @PostMapping("/programs/close")
@@ -50,6 +52,7 @@ public class CloseApi {
                 ? String.format("Closed %d '%s' process(es). Free memory went from %.1f GB to %.1f GB.", mine.size(), name,
                         before / 1073741824.0, after / 1073741824.0)
                 : remaining + " of " + mine.size() + " '" + name + "' process(es) are still running. They may need to be closed from the program itself.";
+        recorder.recordAction("CLOSE_PROGRAM", name, mine.size() + " running", remaining + " running", remaining == 0, message);
         return Map.of("closed", mine.size() - remaining, "remaining", remaining, "freeBefore", before, "freeAfter", after,
                 "message", message);
     }

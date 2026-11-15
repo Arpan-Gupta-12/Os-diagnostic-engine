@@ -10,7 +10,7 @@ export default function Security() {
     <div>
       <Title title="Security" sub="Looks for warning signs of a hacked PC. These are reasons to look closer, not proof, and this is not a virus scan." />
       <Err error={error} />
-      <button className="btn-soft mb-5" onClick={refresh}>Check again</button>
+      <button className="btn-soft mb-5" onClick={() => api.securityScan().then(refresh).catch(refresh)}>Check again</button>
       {data && (
         <div className="space-y-5">
           <div className="card">

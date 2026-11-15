@@ -17,6 +17,14 @@ describe('api', () => {
     expect(fetch).toHaveBeenCalledWith('/api/cleanup?what=thumbnails&hours=48', { method: 'POST' });
   });
 
+  it('sends the checkup id with a cleanup only when there is one', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(200, {})));
+    await api.cleanup('temp', 24, 7);
+    expect(fetch).toHaveBeenCalledWith('/api/cleanup?what=temp&hours=24&scanId=7', { method: 'POST' });
+    await api.plan(24);
+    expect(fetch).toHaveBeenLastCalledWith('/api/plan?hours=24', {});
+  });
+
   it('turns a server error into a readable message', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(500, { message: 'Oops' })));
     await expect(request('/api/scan')).rejects.toThrow('Oops');

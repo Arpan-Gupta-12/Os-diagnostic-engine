@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,29 +22,33 @@ public class CheckupApi {
     private final Demo demo;
     private final ScanRepo scans;
     private final LimitsRepo limits;
+    private final Recorder recorder;
 
-    public CheckupApi(Monitor monitor, Demo demo, ScanRepo scans, LimitsRepo limits) {
+    public CheckupApi(Monitor monitor, Demo demo, ScanRepo scans, LimitsRepo limits, Recorder recorder) {
         this.monitor = monitor;
         this.demo = demo;
         this.scans = scans;
         this.limits = limits;
+        this.recorder = recorder;
     }
 
     @PostMapping("/scan")
     public Scan scan() throws InterruptedException {
         Sample now = monitor.fresh();
-        Scan scan = Checkup.check(now, monitor.recent(), monitor.procs(), monitor.disks(), limits.get());
+        List<Disk> disks = monitor.disks();
+        Scan scan = Checkup.check(now, monitor.recent(), monitor.procs(), disks, limits.get());
         scan.setDemo(demo.on());
-        return scans.save(scan);
+        Scan saved = scans.save(scan);
+        recorder.recordDisks(saved, disks);
+        return saved;
     }
 
     @GetMapping("/scans")
     public List<Scan> scans(@RequestParam(defaultValue = "") String status, @RequestParam(defaultValue = "0") int days) {
-        Instant since = days > 0 ? Instant.now().minus(Duration.ofDays(days)) : Instant.MIN;
-        return scans.findByDemoOrderByTimeDesc(demo.on()).stream()
-                .filter(s -> status.isEmpty() || s.getStatus().equals(status))
-                .filter(s -> s.getTime().isAfter(since))
-                .limit(200).toList();
+        Instant since = days > 0 ? Instant.now().minus(Duration.ofDays(days)) : Instant.EPOCH;
+        PageRequest latest = PageRequest.of(0, 200);
+        return status.isEmpty() ? scans.findByDemoAndTimeAfterOrderByTimeDesc(demo.on(), since, latest)
+                : scans.findByDemoAndStatusAndTimeAfterOrderByTimeDesc(demo.on(), status, since, latest);
     }
 
     @GetMapping("/scans.csv")

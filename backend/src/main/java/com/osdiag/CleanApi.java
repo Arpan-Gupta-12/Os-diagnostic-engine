@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +27,7 @@ public class CleanApi {
 
     private final Demo demo;
     private final CleanupRepo cleanups;
+    private final Recorder recorder;
     private final OsAdapter os = OsAdapter.current();
 
     @Value("${app.temp-dir:#{systemProperties['java.io.tmpdir']}}")
@@ -34,9 +36,10 @@ public class CleanApi {
     @Value("${app.thumbnail-dir:}")
     private String thumbnailDir;
 
-    public CleanApi(Demo demo, CleanupRepo cleanups) {
+    public CleanApi(Demo demo, CleanupRepo cleanups, Recorder recorder) {
         this.demo = demo;
         this.cleanups = cleanups;
+        this.recorder = recorder;
     }
 
     @GetMapping("/cleanup/preview")
@@ -52,20 +55,22 @@ public class CleanApi {
     }
 
     @PostMapping("/cleanup")
-    public Cleanup cleanup(@RequestParam(defaultValue = "temp") String what, @RequestParam(defaultValue = "24") int hours) {
+    public Cleanup cleanup(@RequestParam(defaultValue = "temp") String what, @RequestParam(defaultValue = "24") int hours,
+                           @RequestParam(required = false) Long scanId) {
         Cleanup c = demo.on() ? pretend(what) : clean(target(what), Duration.ofHours(hours));
         c.setTime(Instant.now());
         c.setWhat(what);
         c.setDemo(demo.on());
         c.setSummary(summary(c));
-        return cleanups.save(c);
+        Cleanup saved = cleanups.save(c);
+        recorder.recordCleanup(scanId, saved);
+        return saved;
     }
 
     @GetMapping("/cleanups")
     public List<Cleanup> cleanups(@RequestParam(defaultValue = "0") int days) {
-        Instant since = days > 0 ? Instant.now().minus(Duration.ofDays(days)) : Instant.MIN;
-        return cleanups.findByDemoOrderByTimeDesc(demo.on()).stream()
-                .filter(c -> c.getTime().isAfter(since)).limit(100).toList();
+        Instant since = days > 0 ? Instant.now().minus(Duration.ofDays(days)) : Instant.EPOCH;
+        return cleanups.findByDemoAndTimeAfterOrderByTimeDesc(demo.on(), since, PageRequest.of(0, 100));
     }
 
     /** Removes the files, then measures the folders again, because "the delete worked" is never taken on trust. */

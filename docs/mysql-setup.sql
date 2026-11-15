@@ -16,3 +16,7 @@ FLUSH PRIVILEGES;
 --   SELECT id, time, status, score, summary FROM scans ORDER BY id DESC LIMIT 5;
 --   SELECT id, time, what, files, bytes, verified FROM cleanups ORDER BY id DESC LIMIT 5;
 --   SELECT * FROM limits;
+--   SELECT id, scan_time, total_findings, summary FROM security_scans ORDER BY id DESC LIMIT 5;
+--   SELECT scan_id, drive_name, total_space, free_space, used_space FROM disk_snapshots ORDER BY id DESC LIMIT 5;
+--   SELECT action_type, target, previous_value, new_value, success, result_message FROM system_action_logs ORDER BY id DESC LIMIT 5;
+--   SELECT time, cpu, mem, disk FROM performance_samples ORDER BY id DESC LIMIT 5;

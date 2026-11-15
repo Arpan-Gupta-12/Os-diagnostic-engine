@@ -17,21 +17,31 @@ import org.springframework.web.bind.annotation.RestController;
 public class StartupApi {
 
     private final Demo demo;
+    private final Recorder recorder;
     private final OsAdapter os = OsAdapter.current();
 
-    public StartupApi(Demo demo) {
+    public StartupApi(Demo demo, Recorder recorder) {
         this.demo = demo;
+        this.recorder = recorder;
     }
 
     @GetMapping("/startup")
     public Map<String, Object> startup() {
         List<OsAdapter.Startup> items = demo.on() ? demo.startup() : os.startupItems();
         String power = demo.on() ? demo.power() : os.powerPlan();
+        recorder.recordStartup(items, power, false);
         Map<String, Object> m = new HashMap<>();
         m.put("items", items);
         m.put("power", power);
         m.put("tips", tips(items, power));
         return m;
+    }
+
+    /** Saves the current startup programs and power plan now, even if nothing changed since the last snapshot. */
+    @PostMapping("/startup/snapshot")
+    public Map<String, Object> snapshot() {
+        boolean saved = recorder.recordStartup(os.startupItems(), os.powerPlan(), true);
+        return Map.of("saved", saved);
     }
 
     @PostMapping("/power")
@@ -46,9 +56,11 @@ public class StartupApi {
         boolean done = os.setPowerPlan(plan);
         String after = os.powerPlan();
         boolean changed = done && after != null && !after.equals(before);
-        return Map.of("ok", changed, "message", changed
+        String message = changed
                 ? "The power plan changed from " + before + " to " + after + ". You can change it back in the system power settings."
-                : "The power plan was not changed" + (after == null ? "." : " (it is still " + after + ")."));
+                : "The power plan was not changed" + (after == null ? "." : " (it is still " + after + ").");
+        recorder.recordAction("POWER_PLAN", plan, before, after, changed, message);
+        return Map.of("ok", changed, "message", message);
     }
 
     static List<String> tips(List<OsAdapter.Startup> items, String power) {

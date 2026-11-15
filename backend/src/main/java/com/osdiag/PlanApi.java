@@ -29,17 +29,19 @@ public class PlanApi {
     private final Monitor monitor;
     private final Demo demo;
     private final LimitsRepo limits;
+    private final Recorder recorder;
     private final OsAdapter os = OsAdapter.current();
 
-    public PlanApi(CleanApi clean, Monitor monitor, Demo demo, LimitsRepo limits) {
+    public PlanApi(CleanApi clean, Monitor monitor, Demo demo, LimitsRepo limits, Recorder recorder) {
         this.clean = clean;
         this.monitor = monitor;
         this.demo = demo;
         this.limits = limits;
+        this.recorder = recorder;
     }
 
     @GetMapping("/plan")
-    public List<Plan.Action> plan(@RequestParam(defaultValue = "24") int hours) {
+    public List<Plan.Action> plan(@RequestParam(defaultValue = "24") int hours, @RequestParam(required = false) Long scanId) {
         List<Plan.Action> actions = new ArrayList<>();
         for (String[] c : CLEANABLE) {
             Map<String, Object> found = clean.preview(c[0], hours);
@@ -52,6 +54,7 @@ public class PlanApi {
         String power = demo.on() ? demo.power() : os.powerPlan();
         List<Large.Entry> big = demo.on() ? demoBig() : Large.find(List.of(HOME.resolve("Downloads"), HOME.resolve("Desktop")), 100L << 20, 5);
         actions.addAll(Plan.advice(last, monitor.procs(), limits.get(), startup, power, big));
+        recorder.recordPlan(scanId, actions);
         return actions;
     }
 

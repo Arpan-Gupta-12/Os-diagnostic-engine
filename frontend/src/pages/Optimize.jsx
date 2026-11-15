@@ -23,9 +23,10 @@ export default function Optimize({ autoRun }) {
     setError(null);
     try {
       setStep(0);
-      setScan(await api.scan());
+      const checked = await api.scan();
+      setScan(checked);
       setStep(1);
-      const actions = await api.plan(hours);
+      const actions = await api.plan(hours, checked.id);
       setPlan(actions);
       setPicked(Object.fromEntries(actions.filter((a) => a.kind === 'clean').map((a) => [a.key, a.files > 0])));
       setStep(actions.some((a) => a.kind === 'clean' && a.files > 0) ? 2 : 4);
@@ -41,7 +42,7 @@ export default function Optimize({ autoRun }) {
       setStep(3);
       const done = [];
       for (const [what, yes] of Object.entries(picked)) {
-        if (yes) done.push(await api.cleanup(what, hours));
+        if (yes) done.push(await api.cleanup(what, hours, scan?.id));
       }
       setResults(done);
       setStep(4);

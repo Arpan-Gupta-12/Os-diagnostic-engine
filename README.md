@@ -36,6 +36,9 @@ backend/src/main/java/com/osdiag/       (one folder)
   OsAdapter.java WindowsOs.java LinuxOs.java    what differs between Windows and Linux
   LiveApi  CheckupApi  CleanApi  PlanApi  CloseApi  StartupApi  SecurityApi  SettingsApi    the REST endpoints
   Scan.java  Cleanup.java  Limits.java  Repos.java          database tables
+  PerformanceSample.java SecurityScan.java SecurityFinding.java DiskSnapshot.java StartupSnapshot.java
+  StartupEntry.java SystemActionLog.java OptimizationRun.java OptimizationAction.java   history tables
+  Recorder.java HistoryApi.java                                saves and reads the history (see docs/DATABASE_INTEGRATION.md)
   Sample.java  Proc.java  Disk.java                         plain data
 
 frontend/src/
